@@ -26,27 +26,13 @@ int post_func(HTTPClient &client, const String &payload)
         {
             return httpCode; // Success
         }
-        else if (httpCode == HTTP_CODE_MOVED_PERMANENTLY)
-        {
-            String newLocation = client.header("Location");
-            Serial.printf("Redirected to: %s\n", newLocation.c_str());
-            // Optionally, you can follow the redirect
-            client.begin(newLocation);
-            httpCode = client.GET();
-            if (httpCode > 0)
-            {
-                return httpCode; // Assuming the redirect is successful
-            }
-            else
-            {
-                Serial.printf("Redirect failed: %s\n", client.errorToString(httpCode).c_str());
-            }
-        }
+
         else
         {
             Serial.printf("HTTP error: %d\n", httpCode);
         }
     }
+
     else
     {
         Serial.printf("HTTP request failed: %s\n", client.errorToString(httpCode).c_str());
@@ -92,6 +78,7 @@ DynamicJsonDocument PocketbaseConnection::login_passwd(const char *username, con
     http.begin(*client, endpoint);
 
     http.addHeader("Content-Type", "application/json");
+    http.addHeader("Connection", "keep-alive");
 
     String payload = "{\"identity\":\"" + String(username) + "\",\"password\":\"" + String(password) + "\"}";
     http.setTimeout(10000); // Set timeout to 10 seconds
@@ -158,6 +145,7 @@ String PocketbaseConnection::performGETRequest(const char *endpoint)
         if (https.begin(*client, endpoint))
         {
             https.addHeader("Authorization", auth_token.c_str());
+            https.addHeader("Connection", "keep-alive");
 
             Serial.print("[HTTPS] GET...\n");
             int httpCode = get_func(https);
@@ -194,6 +182,7 @@ String PocketbaseConnection::performGETRequest(const char *endpoint)
         if (http.begin(endpoint))
         {
             http.addHeader("Authorization", auth_token.c_str());
+            http.addHeader("Connection", "keep-alive");
             //  http.setAuthorization(auth_token.c_str());
 
             Serial.print("[HTTP] GET...\n");
@@ -319,6 +308,7 @@ String PocketbaseConnection::performPOSTRequest(const char *endpoint, const Stri
     if (http.begin(*client, endpoint))
     {
         Serial.print("[HTTPS] POST...\n");
+        http.addHeader("Connection", "keep-alive");
 
         int httpCode = post_func(http, requestBody);
         if (httpCode > 0)
