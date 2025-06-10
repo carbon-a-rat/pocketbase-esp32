@@ -221,9 +221,9 @@ void PocketbaseArduino::subscribe(
         https->addHeader("Authorization", current.pb_connection.auth_token);
         https->addHeader("Connection", "keep-alive");
         https->setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
-  //       https->setReuse(true);
+        https->setReuse(true); // Enable connection reuse for subscription GET
   //       https->setTimeout(10000); // Set a timeout for the connection
-        int code = https->GET();
+        int code = retry_GET(*https); // Retry the GET request with a maximum of 5 attempts and a delay of 1000 ms
         if (code > 0)
         {
             Serial.printf("[HTTPS] GET... code: %d\n", code);
@@ -284,9 +284,10 @@ void PocketbaseArduino::subscribe(
     Serial.println("[HTTPS] Subscribing to collection: " + String(collection) + ", recordid: " + String(recordid));
     https_post->addHeader("Content-Type", "application/json");
     https_post->addHeader("Authorization", current.pb_connection.auth_token.c_str());
-    https_post->addHeader("Connection", "keep-alive");
+ //   https_post->addHeader("Connection", "keep-alive");
     https_post->setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS);
-
+    https_post->setReuse(false); // Disable connection reuse for subscription POST
+    https_post->setTimeout(10000); // Set a timeout for the connection
     // Create the JSON payload for the subscription
     DynamicJsonDocument doc(1024);
     doc["clientId"] = current.connection_id; // Use the connection ID from the initial response
@@ -303,7 +304,8 @@ void PocketbaseArduino::subscribe(
     serializeJson(doc, payload);
 
     Serial.println("[HTTPS] Subscription payload: " + payload);
-    int code = https_post->POST(payload);
+   // int code = https_post->POST(payload);
+    auto code = retry_POST(*https_post, payload); // Retry the POST request with a maximum of 5 attempts and a delay of 1000 ms
     if (code > 0)
     {
         Serial.printf("[HTTPS] Subscription POST... code: %d\n", code);
@@ -404,9 +406,9 @@ void PocketbaseArduino::update_subscription()
                 current.tcp_connection->begin(*current.pb_connection.client, current.endpoint);
                 current.tcp_connection->addHeader("Accept", "text/event-stream");
                 current.tcp_connection->addHeader("Authorization", current.pb_connection.auth_token);
-                current.tcp_connection->addHeader("Connection", "keep-alive");
+            //    current.tcp_connection->addHeader("Connection", "keep-alive");
                 current.tcp_connection->setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
-                int code = current.tcp_connection->GET();
+                int code = retry_GET(*current.tcp_connection);
                 if (code <= 0)
                 {
                     Serial.printf("[HTTPS] Unable to reconnect: %s\n", current.tcp_connection->errorToString(code).c_str());

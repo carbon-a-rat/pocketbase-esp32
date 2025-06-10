@@ -16,7 +16,8 @@
 int post_func(HTTPClient &client, const String &payload)
 {
     // client.addHeader("Content-Type", "application/json");
-    int httpCode = client.POST(payload);
+  //  int httpCode = client.POST(payload);
+    auto httpCode = retry_POST(client, payload);
     if (httpCode > 0)
     {
         Serial.println("response code: " + String(httpCode));
@@ -46,7 +47,7 @@ int get_func(HTTPClient &client)
 
     // print raw header
 
-    int httpCode = client.GET();
+    int httpCode = retry_GET(client);
     if (httpCode > 0)
     {
         if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY)
@@ -82,6 +83,7 @@ DynamicJsonDocument PocketbaseConnection::login_passwd(const char *username, con
 
     String payload = "{\"identity\":\"" + String(username) + "\",\"password\":\"" + String(password) + "\"}";
     http.setTimeout(10000); // Set timeout to 10 seconds
+    http.setReuse(false); // Disable connection reuse for login_passwd
     int httpCode = post_func(http, payload);
 
     if (httpCode > 0)

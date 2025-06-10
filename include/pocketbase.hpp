@@ -23,6 +23,34 @@
 
 typedef void (*SubscriptionFn)(String event, String record, void *ctx);
 
+static inline int retry_GET(HTTPClient &client, int retries = 5, int delay_ms = 1000)
+{
+    int httpCode = client.GET();
+    while (httpCode <= 0 && retries > 0)
+    {
+        Serial.printf("[HTTP] GET failed, retrying... (%d retries left)\n", retries);
+        delay(delay_ms);
+        httpCode = client.GET();
+        retries--;
+        delay_ms *= 2; // Exponential backoff
+    }
+    return httpCode;
+}
+static inline int retry_POST(HTTPClient &client, const String &payload, int retries = 5, int delay_ms = 1000)
+{
+   // client.addHeader("Content-Type", "application/json");
+    int httpCode = client.POST(payload);
+    while (httpCode <= 0 && retries > 0)
+    {
+        Serial.printf("[HTTP] POST failed, retrying... (%d retries left)\n", retries);
+        delay(delay_ms);
+        httpCode = client.POST(payload);
+        delay_ms *= 2; // Exponential backoff
+        retries--;
+    }
+    return httpCode;
+}
+
 
 static inline void encode_url_filter(String& raw_url)
 {
