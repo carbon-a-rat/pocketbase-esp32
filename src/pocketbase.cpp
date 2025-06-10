@@ -219,6 +219,7 @@ void PocketbaseArduino::subscribe(
     {
         https->addHeader("Accept", "text/event-stream");
         https->addHeader("Authorization", current.pb_connection.auth_token);
+        https->addHeader("Connection", "keep-alive");
         https->setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
   //       https->setReuse(true);
   //       https->setTimeout(10000); // Set a timeout for the connection
@@ -283,6 +284,7 @@ void PocketbaseArduino::subscribe(
     Serial.println("[HTTPS] Subscribing to collection: " + String(collection) + ", recordid: " + String(recordid));
     https_post->addHeader("Content-Type", "application/json");
     https_post->addHeader("Authorization", current.pb_connection.auth_token.c_str());
+    https_post->addHeader("Connection", "keep-alive");
     https_post->setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS);
 
     // Create the JSON payload for the subscription
@@ -396,6 +398,7 @@ void PocketbaseArduino::update_subscription()
                 current.tcp_connection->begin(*current.pb_connection.client, current.endpoint);
                 current.tcp_connection->addHeader("Accept", "text/event-stream");
                 current.tcp_connection->addHeader("Authorization", current.pb_connection.auth_token);
+                current.tcp_connection->addHeader("Connection", "keep-alive");
                 current.tcp_connection->setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
                 int code = current.tcp_connection->GET();
                 if (code <= 0)
