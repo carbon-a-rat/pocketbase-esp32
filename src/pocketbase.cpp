@@ -291,7 +291,13 @@ void PocketbaseArduino::subscribe(
     DynamicJsonDocument doc(1024);
     doc["clientId"] = current.connection_id; // Use the connection ID from the initial response
     doc["subscriptions"] = JsonArray();
-    doc["subscriptions"].add(current.collection + "/" + current.recordid);
+
+    String subscription_path = String(collection);
+    if (recordid != nullptr && strlen(recordid) > 0)
+    {
+        subscription_path += "/" + String(recordid);
+    }
+    doc["subscriptions"].add(subscription_path);
 
     String payload;
     serializeJson(doc, payload);
