@@ -129,7 +129,46 @@ DynamicJsonDocument PocketbaseConnection::login_passwd(const char *username, con
     }
     return DynamicJsonDocument(0); // Return false if login fails
 }
+bool PocketbaseConnection::performPatchRequest(const char *endpoint, const String &requestBody)
+{
+#if defined(ESP32)
+    HTTPClient http;
 
+    Serial.print("[HTTPS] Full URL: ");
+    Serial.println(endpoint);
+
+    if (http.begin(*client, endpoint))
+    {
+        http.addHeader("Content-Type", "application/json");
+        http.addHeader("Connection", "keep-alive");
+
+        Serial.print("[HTTPS] PATCH...\n");
+        int httpCode = http.PATCH(requestBody);
+        if (httpCode > 0)
+        {
+            Serial.printf("[HTTPS] PATCH... code: %d\n", httpCode);
+            if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_CREATED)
+            {
+                //String payload = http.getString();
+                //Serial.println(payload);
+                http.end();
+                return true;
+            }
+        }
+        else
+        {
+            Serial.printf("[HTTPS] PATCH... failed, error: %s\n", http.errorToString(httpCode).c_str());
+        }
+
+        http.end();
+    }
+    else
+    {
+        Serial.printf("[HTTPS] Unable to connect\n");
+    }
+    #endif
+    return false; // Return an empty string on failure
+}
 String PocketbaseConnection::performGETRequest(const char *endpoint)
 {
 #if defined(ESP32)

@@ -5,7 +5,6 @@
 
 // PocketbaseExtended.h
 
-
 #include <json_parser.h>
 
 #include <ArduinoJson.h>
@@ -21,13 +20,14 @@
 
 #include <Arduino.h>
 
-struct SubscriptionEvent {
+struct SubscriptionEvent
+{
     bool valid;
-    String event; 
-    String data; 
+    String event;
+    String data;
     String id;
 };
-typedef void (*SubscriptionFn)(SubscriptionEvent ev, void *ctx);
+typedef void (*SubscriptionFn)(SubscriptionEvent& ev, void *ctx);
 
 static inline int retry_GET(HTTPClient &client, int retries = 5, int delay_ms = 1000)
 {
@@ -44,7 +44,7 @@ static inline int retry_GET(HTTPClient &client, int retries = 5, int delay_ms = 
 }
 static inline int retry_POST(HTTPClient &client, const String &payload, int retries = 5, int delay_ms = 1000)
 {
-   // client.addHeader("Content-Type", "application/json");
+    // client.addHeader("Content-Type", "application/json");
     int httpCode = client.POST(payload);
     while (httpCode <= 0 && retries > 0)
     {
@@ -57,8 +57,7 @@ static inline int retry_POST(HTTPClient &client, const String &payload, int retr
     return httpCode;
 }
 
-
-static inline void encode_url_filter(String& raw_url)
+static inline void encode_url_filter(String &raw_url)
 {
     raw_url.replace("&", "%26");
     raw_url.replace("?", "%3F");
@@ -75,7 +74,9 @@ struct PocketbaseConnection
     String performGETRequest(const char *endpoint);
     String performDELETERequest(const char *endpoint);
     String performPOSTRequest(const char *endpoint, const String &requestBody);
-    DynamicJsonDocument login_passwd(const char *username, const char *password, const char* collection);
+    bool performPatchRequest(const char *endpoint, const String &requestBody);
+
+    DynamicJsonDocument login_passwd(const char *username, const char *password, const char *collection);
 
     PocketbaseConnection fork()
     {
@@ -94,7 +95,7 @@ struct SubscriptionCtx
     SubscriptionFn callback;
     void *ctx;
     PocketbaseConnection pb_connection; // Pointer to the client for this subscription
-    HTTPClient* tcp_connection;
+    HTTPClient *tcp_connection;
     String endpoint;
     String collection;
     String recordid;
@@ -104,24 +105,22 @@ struct SubscriptionCtx
         : active(false), callback(nullptr), ctx(nullptr), tcp_connection(), endpoint(""), collection(""), recordid("") {}
 };
 
-
 class PocketbaseArduino
 {
 
     DynamicJsonDocument connection_record;
-
 
     size_t subscription_count = 0;
     SubscriptionCtx subscription_ctx[5];
 
     PocketbaseConnection main_connection;
 
-    SubscriptionEvent query_subscription_response(SubscriptionCtx* sub);
+    SubscriptionEvent query_subscription_response(SubscriptionCtx *sub);
+
+    void update_subscription_status(SubscriptionCtx &current);
 
 public:
-
-
-    DynamicJsonDocument& getConnectionRecord() 
+    DynamicJsonDocument &getConnectionRecord()
     {
         return connection_record;
     }
@@ -130,6 +129,8 @@ public:
 
     // Methods to build collection and record URLs
     PocketbaseArduino &collection(const char *collection);
+
+    bool update(String collection, String record_id, String& body);
 
     void subscribe(
         const char *collection,
@@ -143,11 +144,11 @@ public:
 
     void update_subscription();
 
-    bool login_passwd(const char *username, const char *password, const char* user_db = "users")
+    bool login_passwd(const char *username, const char *password, const char *user_db = "users")
     {
         connection_record = main_connection.login_passwd(username, password, user_db);
         connection_record.shrinkToFit();
-        if(connection_record.size() == 0)
+        if (connection_record.size() == 0)
         {
             return false;
         }
