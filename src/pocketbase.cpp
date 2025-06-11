@@ -19,6 +19,8 @@
 #include <WiFiClientSecure.h>
 #endif
 
+
+
 PocketbaseArduino::PocketbaseArduino(const char *baseUrl)
     : connection_record(0)
 {

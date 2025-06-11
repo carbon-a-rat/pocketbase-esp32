@@ -26,6 +26,16 @@ struct SubscriptionEvent {
   String data;
   String id;
 };
+
+
+static inline void printFreeHeap() {
+  Serial.print("Free heap: ");
+  Serial.print(ESP.getFreeHeap());
+  Serial.print(" bytes, ");
+  Serial.print("Min free heap: ");
+  Serial.println(ESP.getMinFreeHeap());
+}
+
 typedef void (*SubscriptionFn)(SubscriptionEvent &ev, void *ctx);
 
 static inline int retry_GET(HTTPClient &client, int retries = 5,
@@ -34,6 +44,7 @@ static inline int retry_GET(HTTPClient &client, int retries = 5,
   while (httpCode <= 0 && retries > 0) {
     Serial.printf("[HTTP] GET failed, retrying... (%d retries left)\n",
                   retries);
+    printFreeHeap();
     delay(delay_ms);
     httpCode = client.GET();
     retries--;
@@ -48,6 +59,7 @@ static inline int retry_POST(HTTPClient &client, const String &payload,
   while (httpCode <= 0 && retries > 0) {
     Serial.printf("[HTTP] POST failed, retrying... (%d retries left)\n",
                   retries);
+    printFreeHeap();
     delay(delay_ms);
     httpCode = client.POST(payload);
     delay_ms *= 2; // Exponential backoff
