@@ -219,7 +219,7 @@ void PocketbaseArduino::subscribe(
     {
         https->addHeader("Accept", "text/event-stream");
         https->addHeader("Authorization", current.pb_connection.auth_token);
-        https->addHeader("Connection", "keep-alive");
+     //   https->addHeader("Connection", "keep-alive");
         https->setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
         https->setReuse(true); // Enable connection reuse for subscription GET
   //       https->setTimeout(10000); // Set a timeout for the connection
@@ -429,6 +429,17 @@ void PocketbaseArduino::update_subscription()
 
             Serial.println("Received event: " + event.event + ", data: " + event.data + ", id: " + event.id);
             
+            
+            // Call the callback function if it exists
+            if (current.callback)
+            {
+                current.callback(event, current.ctx);
+            }
+            else
+            {
+                Serial.println("No callback function set for subscription to collection: " + current.collection + ", recordid: " + current.recordid);
+            }
+
             //  String response = current.pb_connection.client->readStringUntil('\n');
             //   Serial.println("Received response: " + response);
 

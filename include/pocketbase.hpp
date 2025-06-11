@@ -21,7 +21,13 @@
 
 #include <Arduino.h>
 
-typedef void (*SubscriptionFn)(String event, String record, void *ctx);
+struct SubscriptionEvent {
+    bool valid;
+    String event; 
+    String data; 
+    String id;
+};
+typedef void (*SubscriptionFn)(SubscriptionEvent ev, void *ctx);
 
 static inline int retry_GET(HTTPClient &client, int retries = 5, int delay_ms = 1000)
 {
@@ -98,12 +104,6 @@ struct SubscriptionCtx
         : active(false), callback(nullptr), ctx(nullptr), tcp_connection(), endpoint(""), collection(""), recordid("") {}
 };
 
-struct SubscriptionEvent {
-    bool valid;
-    String event; 
-    String data; 
-    String id;
-};
 
 class PocketbaseArduino
 {
