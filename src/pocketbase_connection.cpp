@@ -79,7 +79,7 @@ DynamicJsonDocument PocketbaseConnection::login_passwd(const char *username, con
     http.begin(*client, endpoint);
 
     http.addHeader("Content-Type", "application/json");
-    http.addHeader("Connection", "keep-alive");
+    http.addHeader("Connection", "close"); // Use 'Connection: close' for login_passwd
 
     String payload = "{\"identity\":\"" + String(username) + "\",\"password\":\"" + String(password) + "\"}";
     http.setTimeout(10000); // Set timeout to 10 seconds
@@ -109,6 +109,7 @@ DynamicJsonDocument PocketbaseConnection::login_passwd(const char *username, con
                 auth_token = doc["token"].as<String>();
                 Serial.printf("Login successful. User: %s, Token: %s\n", username, auth_token.c_str());
                 http.end();
+                Serial.printf("Free heap memory: %d\n", ESP.getFreeHeap()); // Monitor memory usage
                 return doc;
             }
             else
@@ -140,8 +141,8 @@ bool PocketbaseConnection::performPatchRequest(const char *endpoint, const Strin
     if (http.begin(*client, endpoint))
     {
         http.addHeader("Content-Type", "application/json");
-        http.addHeader("Connection", "keep-alive");
-
+        http.addHeader("Connection", "keep-alive"); // Use 'Connection: keep-alive' for PATCH requests
+        http.addHeader("Authorization", auth_token.c_str());
         Serial.print("[HTTPS] PATCH...\n");
         int httpCode = http.PATCH(requestBody);
         if (httpCode > 0)
@@ -152,6 +153,7 @@ bool PocketbaseConnection::performPatchRequest(const char *endpoint, const Strin
                 //String payload = http.getString();
                 //Serial.println(payload);
                 http.end();
+                Serial.printf("Free heap memory: %d\n", ESP.getFreeHeap()); // Monitor memory usage
                 return true;
             }
         }
@@ -197,6 +199,7 @@ String PocketbaseConnection::performGETRequest(const char *endpoint)
                 // print request contents (must be removed)
                 //  Serial.println(payload);
                 https.end();
+                Serial.printf("Free heap memory: %d\n", ESP.getFreeHeap()); // Monitor memory usage
                 return payload;
             }
             else
@@ -237,6 +240,7 @@ String PocketbaseConnection::performGETRequest(const char *endpoint)
                     String payload = http.getString();
                     Serial.println(payload);
                     http.end();
+                    Serial.printf("Free heap memory: %d\n", ESP.getFreeHeap()); // Monitor memory usage
                     return payload;
                 }
             }
@@ -283,6 +287,7 @@ String PocketbaseConnection::performDELETERequest(const char *endpoint)
                     // print request contents (must be removed)
                     Serial.println(payload);
                     https.end();
+                    Serial.printf("Free heap memory: %d\n", ESP.getFreeHeap()); // Monitor memory usage
                     return payload;
                 }
             }
@@ -319,6 +324,7 @@ String PocketbaseConnection::performDELETERequest(const char *endpoint)
                     String payload = http.getString();
                     Serial.println(payload);
                     http.end();
+                    Serial.printf("Free heap memory: %d\n", ESP.getFreeHeap()); // Monitor memory usage
                     return payload;
                 }
             }
@@ -360,6 +366,7 @@ String PocketbaseConnection::performPOSTRequest(const char *endpoint, const Stri
                 String payload = http.getString();
                 Serial.println(payload);
                 http.end();
+                Serial.printf("Free heap memory: %d\n", ESP.getFreeHeap()); // Monitor memory usage
                 return payload;
             }
         }
