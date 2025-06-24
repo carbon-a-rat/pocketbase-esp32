@@ -27,7 +27,6 @@ struct SubscriptionEvent {
   String id;
 };
 
-
 static inline void printFreeHeap() {
   Serial.print("Free heap: ");
   Serial.print(ESP.getFreeHeap());
@@ -241,6 +240,8 @@ public:
                  const char *fields = nullptr);
 
   String create(const String &requestBody);
+
+  String batch(String &requestBody);
 
 private:
   String base_url;
