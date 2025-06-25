@@ -146,6 +146,8 @@ public:
 
   void update_subscription();
 
+  PocketbaseArduino fork() const;
+
   bool login_passwd(const char *username, const char *password,
                     const char *user_db = "users") {
     connection_record =

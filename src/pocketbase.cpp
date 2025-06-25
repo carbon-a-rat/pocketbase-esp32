@@ -53,6 +53,16 @@ PocketbaseArduino::PocketbaseArduino(const char *baseUrl)
   }
 }
 
+PocketbaseArduino PocketbaseArduino::fork() const {
+  PocketbaseArduino forked_instance(base_url.substring(0, base_url.length() - 5).c_str()); // Remove "/api/" suffix
+
+  // Copy the connection record and auth token
+  forked_instance.connection_record = connection_record;
+  forked_instance.main_connection.auth_token = main_connection.auth_token;
+
+  return forked_instance;
+}
+
 PocketbaseArduino &PocketbaseArduino::collection(const char *collection) {
   current_endpoint = "collections/" + String(collection) + "/";
   return *this;
@@ -472,6 +482,9 @@ void PocketbaseArduino::unsubscribe(const char *collection,
 String PocketbaseArduino::batch(String &requests) {
   String fullEndpoint = base_url + "batch";
   String requestBody = "{\"requests\": [" + requests + "]}";
+
+  Serial.println("Performing batch request to: " + fullEndpoint);
+  Serial.println("Request body: " + requestBody);
 
   // Perform the POST request with the provided request body
   return main_connection.performPOSTRequest(fullEndpoint.c_str(), requestBody);
