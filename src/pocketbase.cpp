@@ -54,7 +54,8 @@ PocketbaseArduino::PocketbaseArduino(const char *baseUrl)
 }
 
 PocketbaseArduino PocketbaseArduino::fork() const {
-  PocketbaseArduino forked_instance(base_url.substring(0, base_url.length() - 5).c_str()); // Remove "/api/" suffix
+  PocketbaseArduino forked_instance(base_url.substring(0, base_url.length() - 5)
+                                        .c_str()); // Remove "/api/" suffix
 
   // Copy the connection record and auth token
   forked_instance.connection_record = connection_record;
